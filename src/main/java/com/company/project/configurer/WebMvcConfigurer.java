@@ -4,7 +4,7 @@ package com.company.project.configurer;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.support.config.FastJsonConfig;
-import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter4;
+import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.company.project.core.Result;
 import com.company.project.core.ResultCode;
 import com.company.project.core.ServiceException;
@@ -46,7 +46,7 @@ public class WebMvcConfigurer extends WebMvcConfigurerAdapter {
     //使用阿里 FastJson 作为JSON MessageConverter
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-        FastJsonHttpMessageConverter4 converter = new FastJsonHttpMessageConverter4();
+        FastJsonHttpMessageConverter converter = new FastJsonHttpMessageConverter();
         FastJsonConfig config = new FastJsonConfig();
         config.setSerializerFeatures(SerializerFeature.WriteMapNullValue,//保留空的字段
                 SerializerFeature.WriteNullStringAsEmpty,//String null -> ""
@@ -101,27 +101,39 @@ public class WebMvcConfigurer extends WebMvcConfigurerAdapter {
     //添加拦截器
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        //接口签名认证拦截器，该签名认证比较简单，实际项目中可以使用Json Web Token或其他更好的方式替代。
-        if (!"dev".equals(env)) { //开发环境忽略签名认证
-            registry.addInterceptor(new HandlerInterceptorAdapter() {
-                @Override
-                public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-                    //验证签名
-                    boolean pass = validateSign(request);
-                    if (pass) {
-                        return true;
-                    } else {
-                        logger.warn("签名认证失败，请求接口：{}，请求IP：{}，请求参数：{}",
-                                request.getRequestURI(), getIpAddress(request), JSON.toJSONString(request.getParameterMap()));
 
-                        Result result = new Result();
-                        result.setCode(ResultCode.UNAUTHORIZED).setMessage("签名认证失败");
-                        responseResult(response, result);
-                        return false;
-                    }
+        registry.addInterceptor(new HandlerInterceptorAdapter() {
+            @Override
+            public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+                //验证签名
+                boolean pass = true;
+                //接口签名认证拦截器，该签名认证比较简单，实际项目中可以使用Json Web Token或其他更好的方式替代。
+                if (!"dev".equals(env)) { //开发环境忽略签名认证
+                    pass = validateSign(request);
                 }
-            });
-        }
+                if (pass) {
+                    request.setAttribute("start_time", System.currentTimeMillis());
+                    logger.info("================ 请求接口{}开始", request.getRequestURI());
+                    return true;
+                } else {
+                    logger.warn("签名认证失败，请求接口：{}，请求IP：{}，请求参数：{}",
+                            request.getRequestURI(), getIpAddress(request), JSON.toJSONString(request.getParameterMap()));
+
+                    Result result = new Result();
+                    result.setCode(ResultCode.UNAUTHORIZED).setMessage("签名认证失败");
+                    responseResult(response, result);
+                    return false;
+                }
+            }
+
+            @Override
+            public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+                long startTime = (long) request.getAttribute("start_time");
+                request.removeAttribute("start_time");
+                long endTime = System.currentTimeMillis();
+                logger.info("================ 请求接口{}结束，处理时间：{}ms", request.getRequestURI(), endTime - startTime);
+            }
+        });
     }
 
     private void responseResult(HttpServletResponse response, Result result) {
