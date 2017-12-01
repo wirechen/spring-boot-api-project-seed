@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.project.dao.DeviceMapper">
+  <resultMap id="BaseResultMap" type="com.company.project.model.Device">
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="device_id" jdbcType="VARCHAR" property="deviceId" />
+    <result column="device_secret" jdbcType="VARCHAR" property="deviceSecret" />
+    <result column="device_name" jdbcType="VARCHAR" property="deviceName" />
+    <result column="status" jdbcType="VARCHAR" property="status" />
+    <result column="product_id" jdbcType="INTEGER" property="productId" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="last_online_time" jdbcType="TIMESTAMP" property="lastOnlineTime" />
+    <result column="last_offline_time" jdbcType="TIMESTAMP" property="lastOfflineTime" />
+  </resultMap>
+</mapper>
