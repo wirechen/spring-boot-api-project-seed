@@ -30,6 +30,8 @@ public class MybatisConfigurer {
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(dataSource);
         factory.setTypeAliasesPackage(MODEL_PACKAGE);
+        //TypeHandler
+        factory.setTypeHandlersPackage(CORE_PACKAGE);
 
         //配置分页插件，详情请查阅官方文档
         PageHelper pageHelper = new PageHelper();
@@ -47,6 +49,8 @@ public class MybatisConfigurer {
         //添加XML目录
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         factory.setMapperLocations(resolver.getResources("classpath:mapper/*.xml"));
+
+        //设置自定义TypeHandler
         return factory.getObject();
     }
 

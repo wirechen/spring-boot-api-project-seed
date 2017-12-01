@@ -20,7 +20,7 @@ import static com.company.project.core.ProjectConstant.*;
 public class CodeGenerator {
 
     //JDBC配置，请修改为你项目的实际配置
-    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/test";
+    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/smdserver_dev";
     private static final String JDBC_USERNAME = "postgres";
     private static final String JDBC_PASSWORD = "";
     private static final String JDBC_DIVER_CLASS_NAME = "org.postgresql.Driver";
@@ -39,7 +39,7 @@ public class CodeGenerator {
     private static final String DATE = new SimpleDateFormat("yyyy/MM/dd").format(new Date());//@date
 
     public static void main(String[] args) {
-        genCode("account");
+        genCode("users");
         //genCodeByCustomModelName("输入表名","输入自定义Model名称");
     }
 

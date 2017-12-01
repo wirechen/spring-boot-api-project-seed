@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import com.company.project.core.JsonWebToken;
 import com.company.project.core.Result;
 import com.company.project.core.ResultCode;
 import com.company.project.core.ServiceException;
@@ -12,6 +13,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -43,14 +45,19 @@ public class WebMvcConfigurer extends WebMvcConfigurerAdapter {
     @Value("${spring.profiles.active}")
     private String env;//当前激活的配置文件
 
+    @Autowired
+    private JsonWebToken jsonWebToken;
+
     //使用阿里 FastJson 作为JSON MessageConverter
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         FastJsonHttpMessageConverter converter = new FastJsonHttpMessageConverter();
         FastJsonConfig config = new FastJsonConfig();
+        config.setDateFormat(JSON.DEFFAULT_DATE_FORMAT);
         config.setSerializerFeatures(SerializerFeature.WriteMapNullValue,//保留空的字段
                 SerializerFeature.WriteNullStringAsEmpty,//String null -> ""
-                SerializerFeature.WriteNullNumberAsZero);//Number null -> 0
+                SerializerFeature.WriteNullNumberAsZero,//Number null -> 0
+                SerializerFeature.WriteDateUseDateFormat);//timestamp -> yyyy-MM-dd HH:mm:ss
         converter.setFastJsonConfig(config);
         converter.setDefaultCharset(Charset.forName("UTF-8"));
         converters.add(converter);
@@ -95,7 +102,7 @@ public class WebMvcConfigurer extends WebMvcConfigurerAdapter {
     //解决跨域问题
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        //registry.addMapping("/**");
+        registry.addMapping("/**").allowedOrigins("*");
     }
 
     //添加拦截器
@@ -110,10 +117,12 @@ public class WebMvcConfigurer extends WebMvcConfigurerAdapter {
                 //接口签名认证拦截器，该签名认证比较简单，实际项目中可以使用Json Web Token或其他更好的方式替代。
                 if (!"dev".equals(env)) { //开发环境忽略签名认证
                     pass = validateSign(request);
+//                    jsonWebToken.parseJWT(request.getHeader("token")); TODO JWT方式
+
                 }
                 if (pass) {
                     request.setAttribute("start_time", System.currentTimeMillis());
-                    logger.info("================ 请求接口{}开始", request.getRequestURI());
+                    logger.info("================ 请求接口[{}]{}开始", request.getMethod() ,request.getRequestURI());
                     return true;
                 } else {
                     logger.warn("签名认证失败，请求接口：{}，请求IP：{}，请求参数：{}",
@@ -131,7 +140,7 @@ public class WebMvcConfigurer extends WebMvcConfigurerAdapter {
                 long startTime = (long) request.getAttribute("start_time");
                 request.removeAttribute("start_time");
                 long endTime = System.currentTimeMillis();
-                logger.info("================ 请求接口{}结束，处理时间：{}ms", request.getRequestURI(), endTime - startTime);
+                logger.info("================ 请求接口[{}]{}结束，处理时间：{}ms", request.getMethod(), request.getRequestURI(), endTime - startTime);
             }
         });
     }
