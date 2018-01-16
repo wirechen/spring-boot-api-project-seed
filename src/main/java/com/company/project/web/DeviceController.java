@@ -3,6 +3,7 @@ package com.company.project.web;
 import com.alibaba.fastjson.JSONObject;
 import com.company.project.core.Result;
 import com.company.project.core.ResultGenerator;
+import com.company.project.core.ServiceException;
 import com.company.project.model.Device;
 import com.company.project.service.DeviceService;
 import com.github.pagehelper.PageHelper;
@@ -61,7 +62,7 @@ public class DeviceController {
         return ResultGenerator.genSuccessResult(pageInfo);
     }
 
-    @PostMapping("/active")
+    @PostMapping("/activeTest")
     public Result activeTestDevice(@RequestBody JSONObject object) {
         int id = object.getInteger("id");
         Map<String, String> map = deviceService.activeDevice(id);
@@ -70,8 +71,47 @@ public class DeviceController {
 
     @PostMapping("/publish")
     public Result publishTestSpots(@RequestBody JSONObject object) {
-        JSONObject jsonObject = object.getJSONObject("data");
-        Map<String, String> map = deviceService.publishSpots(jsonObject);
+        Map<String, String> map = deviceService.publishSpots(object);
         return ResultGenerator.genSuccessResult(map);
+    }
+
+    @PostMapping("/init")
+    public Result initDevice(@RequestBody JSONObject request) {
+        String imei = request.getString("imei");
+        int productId = request.getInteger("productId");
+        deviceService.initDeviceService(imei, productId);
+        return ResultGenerator.genSuccessResult();
+    }
+
+    @PostMapping("/active")
+    public Result activeDevice(@RequestBody JSONObject request) {
+        String imei = request.getString("imei");
+        String iccid = request.getString("iccid");
+        if (imei == null || iccid == null) {
+            throw new ServiceException("参数imei和iccid不能为空");
+        }
+        Map<String, Object> data = deviceService.activeDeviceService(imei,iccid);
+        return ResultGenerator.genSuccessResult(data);
+    }
+
+    @PostMapping("/regist")
+    public Result registDevice(@RequestBody Device device) {
+
+        deviceService.registDeviceService(device);
+        return ResultGenerator.genSuccessResult();
+    }
+
+    @GetMapping("/openMsn")
+    public Result listenMsn(@RequestParam(required = true) String switchMsn) {
+        deviceService.switchMsn(switchMsn);
+        return ResultGenerator.genSuccessResult();
+    }
+
+    @PostMapping("/p2/active")
+    public Result p2DeviceActive(@RequestBody JSONObject request) {
+        String imei = request.getString("imei");
+        String iccid = request.getString("iccid");
+        Map<String, Object> result = deviceService.P2DeviceActive(imei, iccid);
+        return ResultGenerator.genSuccessResult(result);
     }
 }

@@ -63,4 +63,9 @@ public class ProductServiceImpl extends AbstractService<Product> implements Prod
         }
         return result;
     }
+
+    @Override
+    public void publishToIot(String productKey, String deviceName, String content) {
+        iotHub.testPublish(productKey, deviceName, content);
+    }
 }

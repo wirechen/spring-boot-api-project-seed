@@ -54,7 +54,15 @@ public class UsersServiceImpl extends AbstractService<Users> implements UsersSer
         if (count >= 1) {
             throw new ServiceException("用户名已存在");
         } else {
-            // 保存用户信息
+            // 后端输入合法性验证
+            // email
+            if (!users.getEmail().matches("\\w+@\\w+\\.(com\\.cn)|\\w+@\\w+\\.(com|cn)")) {
+                throw new ServiceException("邮箱格式不正确");
+            }
+            // phone
+            if (!users.getPhoneNumber().matches("1\\d{10}")) {
+                throw new ServiceException("手机格式不正确");
+            }
             users.setCreateTime(new Date());
             save(users);
         }

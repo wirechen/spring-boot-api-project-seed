@@ -9,6 +9,8 @@ import com.company.project.core.JsonWebToken;
 import com.company.project.core.Result;
 import com.company.project.core.ResultCode;
 import com.company.project.core.ServiceException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.SignatureException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -34,6 +36,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Spring MVC 配置
@@ -112,26 +115,41 @@ public class WebMvcConfigurer extends WebMvcConfigurerAdapter {
         registry.addInterceptor(new HandlerInterceptorAdapter() {
             @Override
             public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-                //验证签名
-                boolean pass = true;
                 //接口签名认证拦截器，该签名认证比较简单，实际项目中可以使用Json Web Token或其他更好的方式替代。
-                if (!"dev".equals(env)) { //开发环境忽略签名认证
-                    pass = validateSign(request);
-//                    jsonWebToken.parseJWT(request.getHeader("token")); TODO JWT方式
+                request.setAttribute("start_time", System.currentTimeMillis());
+                logger.info("================ 请求接口[{}]{}开始", request.getMethod() ,request.getRequestURI());
 
-                }
-                if (pass) {
-                    request.setAttribute("start_time", System.currentTimeMillis());
-                    logger.info("================ 请求接口[{}]{}开始", request.getMethod() ,request.getRequestURI());
-                    return true;
+                //开发环境 或者 用户登录注册接口 忽略签名认证
+                if (!"test".equals(env)
+                        && !"/api/v1/users/regist".equals(request.getRequestURI())
+                        && !"/api/v1/users/login".equals(request.getRequestURI())
+                        ) {
+                    String loginName = "";
+
+                    try {
+                        loginName = jsonWebToken.parseJWT(request.getHeader("Authorization")).toString();
+                    } catch (IllegalArgumentException e) { //说明没有传Header-Authorization
+                        throw new ServiceException("没有认证");
+                    } catch (SignatureException e) {
+                        throw new ServiceException("认证失败");
+                    } catch (ExpiredJwtException e) {
+                        throw new ServiceException("认证失效已过期，请重新登录");
+                    }
+
+                    if (loginName != null && !"".equals(loginName)) {
+                        return true;
+                    } else {
+                        logger.warn("签名认证失败，请求接口：{}，请求IP：{}，请求参数：{}",
+                                request.getRequestURI(), getIpAddress(request), JSON.toJSONString(request.getParameterMap()));
+
+                        Result result = new Result();
+                        result.setCode(ResultCode.UNAUTHORIZED).setMessage("认证失败");
+                        responseResult(response, result);
+                        return false;
+                    }
+
                 } else {
-                    logger.warn("签名认证失败，请求接口：{}，请求IP：{}，请求参数：{}",
-                            request.getRequestURI(), getIpAddress(request), JSON.toJSONString(request.getParameterMap()));
-
-                    Result result = new Result();
-                    result.setCode(ResultCode.UNAUTHORIZED).setMessage("签名认证失败");
-                    responseResult(response, result);
-                    return false;
+                    return true;
                 }
             }
 

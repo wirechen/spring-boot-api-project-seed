@@ -6,7 +6,7 @@
       WARNING - @mbg.generated
     -->
     <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="device_id" jdbcType="VARCHAR" property="deviceId" />
+    <result column="iccid" jdbcType="VARCHAR" property="iccid" />
     <result column="device_secret" jdbcType="VARCHAR" property="deviceSecret" />
     <result column="device_name" jdbcType="VARCHAR" property="deviceName" />
     <result column="status" jdbcType="VARCHAR" property="status" />
@@ -15,5 +15,12 @@
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     <result column="last_online_time" jdbcType="TIMESTAMP" property="lastOnlineTime" />
     <result column="last_offline_time" jdbcType="TIMESTAMP" property="lastOfflineTime" />
+    <result column="imei" jdbcType="VARCHAR" property="imei" />
+    <result column="site_name" jdbcType="VARCHAR" property="siteName" />
+    <result column="coordinates" jdbcType="OTHER" property="coordinates" />
+    <result column="is_outage" jdbcType="INTEGER" property="isOutage" />
+    <result column="is_wind" jdbcType="INTEGER" property="isind" />
+    <result column="site_high" jdbcType="FLOAT" property="siteHigh" />
+    <result column="site_img" jdbcType="VARCHAR" property="siteImg" />
   </resultMap>
 </mapper>

@@ -1,5 +1,7 @@
 package com.company.project.model;
 
+import tk.mybatis.mapper.annotation.NameStyle;
+
 import java.util.Date;
 import javax.persistence.*;
 
@@ -18,7 +20,7 @@ public class Users {
     private String email;
 
     @Column(name = "phone_number")
-    private Integer phoneNumber;
+    private String phoneNumber;
 
     private String address;
 
@@ -104,14 +106,14 @@ public class Users {
     /**
      * @return phone_number
      */
-    public Integer getPhoneNumber() {
+    public String getPhoneNumber() {
         return phoneNumber;
     }
 
     /**
      * @param phoneNumber
      */
-    public void setPhoneNumber(Integer phoneNumber) {
+    public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 

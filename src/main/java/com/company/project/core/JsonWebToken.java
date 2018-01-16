@@ -56,13 +56,13 @@ public class JsonWebToken {
      * @return
      * @throws Exception
      */
-    public Claims parseJWT(String jwt) throws Exception{
+    public Object parseJWT(String jwt) throws Exception{
         SecretKey key = generalKey();
         Claims claims = Jwts.parser()
                     .setSigningKey(key)
                     .parseClaimsJws(jwt)
                     .getBody();
-        return claims;
+        return claims.get("sub");
     }
 
 

@@ -17,4 +17,14 @@ public interface DeviceService extends Service<Device> {
 
     Map<String, String> publishSpots(JSONObject jsonObject);
 
+    void initDeviceService(String imei, int productId);
+
+    Map<String,Object> activeDeviceService(String imei, String iccid);
+
+    void registDeviceService(Device device);
+
+    void switchMsn(String switchMsn);
+
+    //2号产品设备激活
+    Map<String,Object> P2DeviceActive(String imei, String iccid);
 }

@@ -1,5 +1,9 @@
 package com.company.project.model;
 
+import com.company.project.core.JSONTypeHandler;
+import org.apache.ibatis.type.JdbcType;
+import tk.mybatis.mapper.annotation.ColumnType;
+
 import java.util.Date;
 import javax.persistence.*;
 
@@ -7,8 +11,8 @@ public class Device {
     @Id
     private Integer id;
 
-    @Column(name = "device_id")
-    private String deviceId;
+    @Column(name = "iccid")
+    private String iccid;
 
     @Column(name = "device_secret")
     private String deviceSecret;
@@ -33,6 +37,26 @@ public class Device {
     @Column(name = "last_offline_time")
     private Date lastOfflineTime;
 
+    private String imei;
+
+    @Column(name = "site_name")
+    private String siteName;
+
+    @ColumnType(jdbcType = JdbcType.OTHER, typeHandler = JSONTypeHandler.class)
+    private Object coordinates;
+
+    @Column(name = "is_outage")
+    private Integer isOutage;
+
+    @Column(name = "is_wind")
+    private Integer isWind;
+
+    @Column(name = "site_high")
+    private Float siteHigh;
+
+    @Column(name = "site_img")
+    private String siteImg;
+
     /**
      * @return id
      */
@@ -47,18 +71,12 @@ public class Device {
         this.id = id;
     }
 
-    /**
-     * @return device_id
-     */
-    public String getDeviceId() {
-        return deviceId;
+    public String getIccid() {
+        return iccid;
     }
 
-    /**
-     * @param deviceId
-     */
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
+    public void setIccid(String iccid) {
+        this.iccid = iccid;
     }
 
     /**
@@ -171,5 +189,61 @@ public class Device {
      */
     public void setLastOfflineTime(Date lastOfflineTime) {
         this.lastOfflineTime = lastOfflineTime;
+    }
+
+    public String getImei() {
+        return imei;
+    }
+
+    public void setImei(String imei) {
+        this.imei = imei;
+    }
+
+    public String getSiteName() {
+        return siteName;
+    }
+
+    public void setSiteName(String siteName) {
+        this.siteName = siteName;
+    }
+
+    public Object getCoordinates() {
+        return coordinates;
+    }
+
+    public void setCoordinates(Object coordinates) {
+        this.coordinates = coordinates;
+    }
+
+    public Integer getIsOutage() {
+        return isOutage;
+    }
+
+    public void setIsOutage(Integer isOutage) {
+        this.isOutage = isOutage;
+    }
+
+    public Integer getIsWind() {
+        return isWind;
+    }
+
+    public void setIsWind(Integer isWind) {
+        this.isWind = isWind;
+    }
+
+    public Float getSiteHigh() {
+        return siteHigh;
+    }
+
+    public void setSiteHigh(Float siteHigh) {
+        this.siteHigh = siteHigh;
+    }
+
+    public String getSiteImg() {
+        return siteImg;
+    }
+
+    public void setSiteImg(String siteImg) {
+        this.siteImg = siteImg;
     }
 }

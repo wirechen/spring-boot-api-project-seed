@@ -12,4 +12,5 @@ public interface ProductService extends Service<Product> {
 
     String updateProduct(int id, String productName, String desc);
 
+    void publishToIot(String productKey, String deviceName, String content);
 }

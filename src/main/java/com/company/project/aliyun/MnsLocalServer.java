@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class MnsLocalServer {
@@ -32,6 +33,13 @@ public class MnsLocalServer {
     private DeviceService deviceService;
     @Autowired
     private SpotsService spotsService;
+
+    //全局变量 控制是否监听mns消息服务
+    private Boolean switchMsn = true;
+
+    public void setSwitchMsn(Boolean switchMsn) {
+        this.switchMsn = switchMsn;
+    }
 
     /**
      * MNS 消息服务
@@ -47,13 +55,19 @@ public class MnsLocalServer {
 
         MNSClient client = account.getMNSClient();
         CloudQueue queue = client.getQueueRef(QueueName); //参数请输入IoT自动创建的队列名称，例如上面截图中的aliyun-iot-3AbL0062osF
-        while (true) {
+        Boolean flag = true;
+
+        while (switchMsn) {
             // 获取消息
-            Message popMsg = queue.popMessage(10); //长轮询等待时间为10秒
+//            System.out.println(queue.popMessage().getMessageBody());
+//            if (popMsgd != null) {
+//                System.out.println("=====  " +popMsgd.size());
+//            }
+            Message popMsg = queue.popMessage(10);
             if (popMsg != null) {
                 String originalData = popMsg.getMessageBodyAsRawString();//获取原始消息（Base64编码后的数据）
                 /**
-                 * {
+                 {
                  "messageid":"12345",
                  "messagetype":"status/upload",
                  "topic":"null/topic",
@@ -67,8 +81,18 @@ public class MnsLocalServer {
 
                 String payload = message.get("payload").toString();
                 String payloadDe = new String(Base64.decodeBase64(payload));
-                JSONObject data = JSON.parseObject(payloadDe);
-                logger.info("PopMessage Body: " + data);
+                JSONObject data = null;
+                logger.info("originalDataDe:" + originalDataDe);
+                logger.info("payload:" + payload);
+                logger.info("payloadDe:" + payloadDe);
+
+                try {
+                    data = JSON.parseObject(payloadDe);
+                    logger.info("PopMessage Body: " + data);
+                } catch (Exception e) {
+                    logger.error("PopMessage Body不是JSON格式");
+                    flag = false;
+                }
 
                 if ("status".equals(messageType)) { // 状态 -> 更新设备状态
 
@@ -94,26 +118,30 @@ public class MnsLocalServer {
                         deviceService.update(device);
                     }
 
-                } else { // 数据上传 -> 入库
+                } else if ("upload".equals(messageType) && flag) { // 数据上传 -> 入库
 
-                    int deviceId = data.getInteger("device_id");
-                    int userId = data.getInteger("user_id");
-                    long collectedTime = Long.parseLong(data.getString("collected_at"));
-                    JSONObject spotsData = data.getJSONObject("data");
-                    Spots spots = new Spots();
-                    spots.setDeviceId(deviceId);
-                    spots.setUserId(userId);
-                    spots.setInsertedAt(new Date(collectedTime));
-                    spots.setData(spotsData);
+                    try{
+                        int deviceId = data.getInteger("device_id");
+                        int userId = data.getInteger("user_id");
+                        long collectedTime = 0;
+                        collectedTime = Long.parseLong(data.getString("collected_at"));
+                        JSONObject spotsData = data.getJSONObject("data");
+                        Spots spots = new Spots();
+                        spots.setDeviceId(deviceId);
+                        spots.setUserId(userId);
+                        spots.setInsertedAt(new Date(collectedTime));
+                        spots.setData(spotsData);
+                        spotsService.save(spots);
+                    }catch (Exception e){
 
-                    spotsService.save(spots);
+                    }
 
                 }
 
                 //从队列中删除消息
                 queue.deleteMessage(popMsg.getReceiptHandle());
             } else {
-                System.out.println("Continuing");
+                System.out.println("Continuing --- " + new Date());
             }
         }
     }

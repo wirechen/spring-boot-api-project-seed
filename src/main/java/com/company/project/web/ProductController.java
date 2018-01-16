@@ -66,4 +66,13 @@ public class ProductController {
         PageInfo pageInfo = new PageInfo(list);
         return ResultGenerator.genSuccessResult(pageInfo);
     }
+
+    @PostMapping("/test/publish")
+    public Result publishTest(@RequestBody JSONObject object) {
+        String productKey = object.getString("product_key");
+        String deviceName = object.getString("device_name");
+        String content = object.getJSONObject("content").toJSONString();
+        productService.publishToIot(productKey, deviceName, content);
+        return ResultGenerator.genSuccessResult();
+    }
 }

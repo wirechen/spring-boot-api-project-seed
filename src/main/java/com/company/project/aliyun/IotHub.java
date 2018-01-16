@@ -6,6 +6,7 @@ import com.aliyuncs.iot.model.v20170620.*;
 import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
 import com.company.project.configurer.PropertiesConfigurer;
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,6 +110,49 @@ public class IotHub {
         map.put("device_name", registDeviceResponse.getDeviceName());
         map.put("info", registDeviceResponse.getErrorMessage() == null ? "success" : registDeviceResponse.getErrorMessage());
         return map;
+    }
+
+    public Map<String, Object> createDevice(String productKey) {
+        RegistDeviceRequest registDeviceRequest = new RegistDeviceRequest();
+        registDeviceRequest.setProductKey(productKey);
+        RegistDeviceResponse registDeviceResponse = null;
+        try {
+            registDeviceResponse = getClient().getAcsResponse(registDeviceRequest);
+        } catch (ClientException e) {
+            e.printStackTrace();
+        }
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("device_secret", registDeviceResponse.getDeviceSecret());
+        map.put("device_name", registDeviceResponse.getDeviceName());
+        return map;
+    }
+
+
+    public void testPublish(String productKey, String deviceName, String content) {
+
+        String accessKey = "LTAI6ZFkpwi8LRYn";
+        String accessSecret = "ppQnf2lp0KSFkUckfEHhI4DMfuq6TR";
+        try {
+            DefaultProfile.addEndpoint("cn-shanghai", "cn-shanghai", "Iot", "iot.cn-shanghai.aliyuncs.com");
+        } catch (ClientException e) {
+            e.printStackTrace();
+        }
+        IClientProfile profile = DefaultProfile.getProfile("cn-shanghai", accessKey, accessSecret);
+        DefaultAcsClient client = new DefaultAcsClient(profile);
+
+        PubRequest request = new PubRequest();
+        request.setProductKey(productKey);
+        request.setMessageContent(Base64.encodeBase64String(content.getBytes()));
+        request.setTopicFullName("/"+productKey+"/"+deviceName+"/get");
+        request.setQos(1); //目前支持QoS0和QoS1
+        PubResponse response = null;
+        try {
+            response = client.getAcsResponse(request);
+        } catch (ClientException e) {
+            e.printStackTrace();
+        }
+        System.out.println(response.getSuccess());
+        System.out.println(response.getErrorMessage());
     }
 
 }
